@@ -70,12 +70,15 @@ async def verify_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
     except Exception as e:
         print(f"Error: {e}")
+        # Pehle error batayein
         await query.answer("❌ Error: Check karein ki bot channel mein Admin hai.", show_alert=True)
-            "Please make sure you have joined the channel and the bot is admin.\n"
-            "Try clicking **Verify** again.",
+        # Phir naya message bhejein jisme button ho
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Please join the channel and try again.",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📢 Join Channel", url=FORCE_CHANNEL_LINK)],
-                [InlineKeyboardButton("✅ Verify Again", callback_data="verify_join")]
+                [InlineKeyboardButton("Join Channel", url=FORCE_CHANNEL_LINK)],
+                [InlineKeyboardButton("Verify Again", callback_data="verify_join")]
             ])
         )
 
