@@ -214,9 +214,11 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("num", num_command))
+    # Yahan dhyan dein: MessageHandler sahi class hai
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(CallbackQueryHandler(verify_callback, pattern="^verify_join$"))
-    print("✅ Bot is running... (with verify buttons)")
+
+    print("✅ Bot is running...")
     app.run_polling()
 
 # ==========================
