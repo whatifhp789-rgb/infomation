@@ -18,7 +18,7 @@ from telegram.constants import ChatMemberStatus
 # ==========================
 BOT_TOKEN = "8693148816:AAGtEdT7kI3UXMYcXahqDeATa5AdGEA3br0"
 OWNER_USERNAME = "@SANJUklNG"
-API_BASE = "https://san-ju.vercel.app/userid"
+API_BASE = "https://san-ju.vercel.app/userid/"
 
 # Force Join Channel & Group
 FORCE_CHANNEL_ID = -1002091456364
