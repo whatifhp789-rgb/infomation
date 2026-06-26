@@ -60,21 +60,18 @@ def send_message(chat_id, text, reply_markup=None, parse_mode=None):
         return None
 
 def get_updates(offset=None):
-    url = f"{API_URL}/getUpdates"
-    # timeout ko 30 seconds set kiya taaki Telegram connection hold rakhe aur instant reply aaye
+    url = f"{BASE_URL}/getUpdates"
     params = {"timeout": 30}
     if offset:
         params["offset"] = offset
         
     try:
-        # timeout parameter ko requests.get mein bhi badha diya
         response = requests.get(url, params=params, timeout=35)
         if response.status_code == 200:
             return response.json()
     except Exception as e:
         print(f"❌ Error getting updates: {e}")
     return None
-
 def lookup_phone(phone_number):
     try:
         response = requests.get(f"{EXTERNAL_API_URL}?phone={phone_number}")
