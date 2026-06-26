@@ -98,45 +98,71 @@ def format_response(data):
     formatted_json = json.dumps(data, indent=2, ensure_ascii=False)
     return f"<pre>{formatted_json}</pre>"
 
-def process_message(message):
-    chat_id = message["chat"]["id"]
-    text = message.get("text", "")
-    # --- 1. GATEKEEPER FUNCTION (Ise file ke niche paste karein) ---
+import requests
+
+# --- APNI DETAILS YAHAN DAALEIN ---
+TOKEN = "YOUR_BOT_TOKEN_HERE"
+BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
+CHANNEL_ID = "-1002091456364"  # Apni -100 wali Channel ID
+CHANNEL_URL = "https://t.me/+pDQ_FnUdGD00Zjk1"
+
+# --- HELPER FUNCTIONS ---
+def send_message(chat_id, text, reply_markup=None):
+    params = {"chat_id": chat_id, "text": text}
+    if reply_markup:
+        params["reply_markup"] = str(reply_markup).replace("'", '"')
+    requests.get(f"{BASE_URL}/sendMessage", params=params)
+
+def get_updates(offset=None):
+    url = f"{BASE_URL}/getUpdates"
+    if offset: url += f"?offset={offset}"
+    return requests.get(url).json()
+
+# --- GATEKEEPER ---
 def is_user_in_channel(user_id):
-    # YAHAN APNI CHANNEL ID DALEN (-100 se shuru hone wali)
-    CHANNEL_ID = "-1002091456364" 
-    url = f"{BASE_URL}/getChatMember"
     params = {"chat_id": CHANNEL_ID, "user_id": user_id}
-    try:
-        response = requests.get(url, params=params).json()
-        if response.get("ok"):
-            status = response["result"]["status"]
-            return status in ["member", "administrator", "creator"]
-    except:
-        return False
+    response = requests.get(f"{BASE_URL}/getChatMember", params=params).json()
+    if response.get("ok"):
+        return response["result"]["status"] in ["member", "administrator", "creator"]
     return False
 
-# --- 2. LOGIC INTEGRATION (process_message function ke andar) ---
+def handle_callback(callback_query):
+    user_id = callback_query["from"]["id"]
+    chat_id = callback_query["message"]["chat"]["id"]
+    requests.get(f"{BASE_URL}/answerCallbackQuery?callback_query_id={callback_query['id']}")
+    
+    if callback_query.get("data") == "verify":
+        if is_user_in_channel(user_id):
+            send_message(chat_id, "✅ Verified! Ab aap bot use kar sakte hain.")
+        else:
+            send_message(chat_id, "❌ Aapne channel join nahi kiya. Pehle join karein!")
+
+# --- MESSAGE PROCESSOR ---
 def process_message(message):
     chat_id = message["chat"]["id"]
-    user_id = message["from"]["id"] 
+    user_id = message["from"]["id"]
     
-    # --- GATEKEEPER CHECK ---
     if not is_user_in_channel(user_id):
-        # YAHAN APNE CHANNEL KA URL DALEN
-        CHANNEL_URL = "https://t.me/+pDQ_FnUdGD00Zjk1"
-        markup = {
-            "inline_keyboard": [
-                [{"text": "CLICK HERE ✅", "url": CHANNEL_URL}],
-                [{"text": "JOINED & VERIFY ✅", "callback_data": "verify"}]
-            ]
-        }
-        send_message(chat_id, "🚫 Access Denied\n\nBot use karne ke liye pehle hamara channel join karein.", reply_markup=markup)
-        return  # Ye line access block kar degi
-    
-    # --- PURANA CODE YAHAN SE SHURU HOTA HAI ---
+        markup = {"inline_keyboard": [[{"text": "CLICK HERE ✅", "url": CHANNEL_URL}],
+                                      [{"text": "JOINED & VERIFY ✅", "callback_data": "verify"}]]}
+        send_message(chat_id, "🚫 Access Denied! Bot use karne ke liye channel join karein.", reply_markup=markup)
+        return
+
     text = message.get("text", "")
-    # ... (baaki ka aapka purana logic)
+    if text == "/start":
+        send_message(chat_id, "Welcome to the Phone Lookup Bot!")
+
+# --- MAIN LOOP ---
+offset = 0
+while True:
+    updates = get_updates(offset)
+    if updates.get("result"):
+        for update in updates["result"]:
+            offset = update["update_id"] + 1
+            if "callback_query" in update:
+                handle_callback(update["callback_query"])
+            elif "message" in update:
+                process_message(update["message"])
     if text == "/start":
         welcome_message = (
             "👋 Welcome to the Phone Lookup Bot!\n\n"
