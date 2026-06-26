@@ -101,7 +101,42 @@ def format_response(data):
 def process_message(message):
     chat_id = message["chat"]["id"]
     text = message.get("text", "")
+    # --- 1. GATEKEEPER FUNCTION (Ise file ke niche paste karein) ---
+def is_user_in_channel(user_id):
+    # YAHAN APNI CHANNEL ID DALEN (-100 se shuru hone wali)
+    CHANNEL_ID = "-1002091456364" 
+    url = f"{BASE_URL}/getChatMember"
+    params = {"chat_id": CHANNEL_ID, "user_id": user_id}
+    try:
+        response = requests.get(url, params=params).json()
+        if response.get("ok"):
+            status = response["result"]["status"]
+            return status in ["member", "administrator", "creator"]
+    except:
+        return False
+    return False
 
+# --- 2. LOGIC INTEGRATION (process_message function ke andar) ---
+def process_message(message):
+    chat_id = message["chat"]["id"]
+    user_id = message["from"]["id"] 
+    
+    # --- GATEKEEPER CHECK ---
+    if not is_user_in_channel(user_id):
+        # YAHAN APNE CHANNEL KA URL DALEN
+        CHANNEL_URL = "https://t.me/+pDQ_FnUdGD00Zjk1"
+        markup = {
+            "inline_keyboard": [
+                [{"text": "CLICK HERE ✅", "url": CHANNEL_URL}],
+                [{"text": "JOINED & VERIFY ✅", "callback_data": "verify"}]
+            ]
+        }
+        send_message(chat_id, "🚫 Access Denied\n\nBot use karne ke liye pehle hamara channel join karein.", reply_markup=markup)
+        return  # Ye line access block kar degi
+    
+    # --- PURANA CODE YAHAN SE SHURU HOTA HAI ---
+    text = message.get("text", "")
+    # ... (baaki ka aapka purana logic)
     if text == "/start":
         welcome_message = (
             "👋 Welcome to the Phone Lookup Bot!\n\n"
