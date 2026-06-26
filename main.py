@@ -212,10 +212,10 @@ async def process_number(update: Update, number: str):
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start,filters=filters.ChatType.GROUPS))
-    app.add_handler(CommandHandler("num", num_command,filters=filters.chatType.Groups))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("num", num_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.add_handler(CallbackQueryHandler(verify_callback, pattern="^verify_join$",filters=filters.ChatTpe.Groups))
+    app.add_handler(CallbackQueryHandler(verify_callback, pattern="^verify_join$"))
 
     print("✅ Bot is running... (with verify buttons)")
     app.run_polling()
