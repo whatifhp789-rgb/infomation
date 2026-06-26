@@ -17,7 +17,7 @@ from telegram.constants import ChatMemberStatus
 # CONFIG
 # ==========================
 BOT_TOKEN = "8693148816:AAGtEdT7kI3UXMYcXahqDeATa5AdGEA3br0"
-OWNER_USERNAME = "@SANJUklNG"
+OWNER_USERNAME = "@"
 API_BASE = "https://san-ju.vercel.app/userid/"
 
 # Force Join Channel & Group
@@ -54,31 +54,45 @@ async def send_welcome_with_verify(update: Update, context: ContextTypes.DEFAULT
 # VERIFY CALLBACK
 # ==========================
 async def verify_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the verify button click - check if user joined the channel."""
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
 
     try:
-        member = await context.bot.get_chat_member(chat_id=FORCE_CHANNEL_ID, user_id=user_id)
-        
-        # Check status
-        if member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
-            await query.edit_message_text("✅ Verification successful! You can now use the bot.")
-            await context.bot.send_message(chat_id=update.effective_chat.id, text="System Online...\nNumber Info Bot Ready!\nEnter Target Number:\n9876543210\nDeveloper: {SANJU}")
+        member = await context.bot.get_chat_member(FORCE_CHANNEL_ID, user_id)
+        if member.status in (ChatMemberStatus.MEMBER,
+                             ChatMemberStatus.ADMINISTRATOR,
+                             ChatMemberStatus.OWNER):
+            # User is a member
+            await query.edit_message_text("✅ **Verification successful!** You can now use the bot.")
+            # Show main menu
+            await query.message.reply_text(
+                "⚡ System Online...\n\n"
+                "🤖 Number Info Bot Ready!\n\n"
+                "📱 Enter Target Number:\n"
+                "💡 9876543210\n\n"
+                f"👨‍💻 Developer: {OWNER_USERNAME}"
+            )
         else:
-            await query.answer("❌ Aapne abhi tak channel join nahi kiya hai!", show_alert=True)
-            
-    except Exception as e:
-        print(f"Error: {e}")
-        # Pehle error batayein
-        await query.answer("❌ Error: Check karein ki bot channel mein Admin hai.", show_alert=True)
-        # Phir naya message bhejein jisme button ho
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="Please join the channel and try again.",
+            # User exists but not a member
+            await query.edit_message_text(
+                "❌ **You haven't joined the channel yet.**\n\n"
+                "Please join using the buttons below and click **Verify** again.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📢 Join Channel", url=FORCE_CHANNEL_LINK)],
+                    [InlineKeyboardButton("✅ Verify Again", callback_data="verify_join")]
+                ])
+            )
+    except Exception:
+        # Bot can't check (not admin, wrong ID, etc.)
+        await query.edit_message_text(
+            "❌ **Cannot verify your membership.**\n\n"
+            "Please make sure you have joined the channel and the bot is admin.\n"
+            "Try clicking **Verify** again.",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Join Channel", url=FORCE_CHANNEL_LINK)],
-                [InlineKeyboardButton("Verify Again", callback_data="verify_join")]
+                [InlineKeyboardButton("📢 Join Channel", url=FORCE_CHANNEL_LINK)],
+                [InlineKeyboardButton("✅ Verify Again", callback_data="verify_join")]
             ])
         )
 
@@ -119,7 +133,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🤖 Number Info Bot Ready!\n\n"
             "📱 Enter Target Number:\n"
             "💡 9876543210\n\n"
-            f"👨‍💻 Developer: {SANJUKlNG}"
+            f"👨‍💻 Developer: {OWNER_USERNAME}"
         )
 
 # ==========================
@@ -214,11 +228,10 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("num", num_command))
-    # Yahan dhyan dein: MessageHandler sahi class hai
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(CallbackQueryHandler(verify_callback, pattern="^verify_join$"))
 
-    print("✅ Bot is running...")
+    print("✅ Bot is running... (with verify buttons)")
     app.run_polling()
 
 # ==========================
