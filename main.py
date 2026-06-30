@@ -16,7 +16,7 @@ from telegram.constants import ChatMemberStatus
 # ==========================
 # CONFIG
 # ==========================
-BOT_TOKEN = "8693148816:AAGtEdT7kI3UXMYcXahqDeATa5AdGEA3br0"
+BOT_TOKEN = "8693148816:AAEMLv4HGijb6Kaoj1p9PCaKNcLcIPSMpJg"
 OWNER_USERNAME = "@SANJUKlNG"
 API_BASE = "https://san-ju.vercel.app/userid/"
 
