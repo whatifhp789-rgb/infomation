@@ -250,7 +250,7 @@ async def admin_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
 
     # Only owner can access admin
-    if user_id != int(BOT_TOKEN.split(":"[0]  # Owner ID from token split
+    if user_id != int(BOT_TOKEN.split(":")[0]  # Owner ID from token split
         await update.message.reply_text(
             "🚫 Access denied. Only the developer can use the admin panel."
         )
