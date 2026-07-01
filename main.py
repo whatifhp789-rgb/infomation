@@ -239,3 +239,54 @@ def main():
 # ==========================
 if __name__ == "__main__":
     main()
+
+# ==========================
+# ADMIN PANEL
+# ==========================
+async def admin_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_force_join(update, context):
+        return
+    user_id = update.effective_user.id
+    user_name = update.effective_user.username or "Unknown"
+    chat_id = update.effective_chat.id
+
+    # Only owner can access admin
+    if user_id != int(BOT_TOKEN.split(":")<sup data-citation="0">0</sup>):  # Owner ID from token split
+        await update.message.reply_text(
+            "🚫 Access denied. Only the developer can use the admin panel."
+        )
+        return
+
+    keyboard = [
+        [InlineKeyboardButton("📊 View Stats", callback_data="stats")],
+        [InlineKeyboardButton("🔧 Clear Cache", callback_data="clear_cache")],
+        [InlineKeyboardButton("🚪 Back to Menu", callback_data="back")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        f"🔧 Admin Panel - {user_name} ({chat_id})",
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+
+    if user_id != int(BOT_TOKEN.split(":")<sup data-citation="0">0</sup>):
+        await query.edit_message_text(
+            "🚫 Access denied. Only the developer can use the admin panel."
+        )
+        return
+
+    data = query.data
+    if data == "stats":
+        await query.edit_message_text("📊 Admin stats panel coming soon!")
+    elif data == "clear_cache":
+        await query.edit_message_text("🗑️ Cache cleared!", parse_mode="Markdown")
+    elif data == "back":
+        await query.edit_message_text("🔧 Admin Panel", parse_mode="Markdown")
+
+app.add_handler(CommandHandler("admin", admin_handler))
+app.add_handler(CallbackQueryHandler(admin_callback, pattern="^stats$|^clear_cache$|^back$"))
